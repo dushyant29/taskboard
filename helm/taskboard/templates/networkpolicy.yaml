@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: {{ .Release.Name }}-data-allow-app-only}
+spec:
+  podSelector:
+    matchExpressions: [{key: app, operator: In, values: [postgres, redis]}]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions: [{key: app, operator: In, values: [backend, migrate, postgres]}]

@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: app, POSTGRES_PASSWORD: app, POSTGRES_DB: app}
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U app"], interval: 5s, retries: 10}
+  redis:
+    image: redis:7-alpine
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://app:app@db:5432/app
+      REDIS_URL: redis://redis:6379/0
+    depends_on: {db: {condition: service_healthy}}
+    command: sh -c "python -m app.migrate && gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 app.main:app"
+  frontend:
+    build: ./frontend
+    ports: ["8080:8080"]
+    depends_on: [backend]

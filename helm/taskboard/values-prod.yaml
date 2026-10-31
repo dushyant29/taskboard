@@ -1,0 +1,9 @@
+backend:
+  replicas: 3
+  autoscaling: {enabled: true, min: 3, max: 10, cpu: 65}
+ingress:
+  host: taskboard.example.com
+  tls: {enabled: true, secretName: taskboard-tls}
+postgres: {enabled: false}      # use RDS
+externalDatabaseUrl: ""         # pass via --set from CI secret
+monitoring: {serviceMonitor: true, alerts: true}

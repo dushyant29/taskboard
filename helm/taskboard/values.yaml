@@ -1,0 +1,27 @@
+backend:
+  image: {repository: ghcr.io/YOUR_USER/taskboard-backend, tag: latest, pullPolicy: IfNotPresent}
+  replicas: 2
+  resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 256Mi}}
+  autoscaling: {enabled: true, min: 2, max: 6, cpu: 70}
+frontend:
+  image: {repository: ghcr.io/YOUR_USER/taskboard-frontend, tag: latest, pullPolicy: IfNotPresent}
+  replicas: 2
+  resources: {requests: {cpu: 20m, memory: 32Mi}, limits: {cpu: 100m, memory: 64Mi}}
+ingress:
+  enabled: true
+  className: nginx
+  host: taskboard.local
+  tls: {enabled: false, secretName: taskboard-tls}
+postgres:
+  enabled: true            # set false in prod and use RDS via externalDatabaseUrl
+  image: postgres:16-alpine
+  storage: 5Gi
+  user: app
+  db: app
+  password: changeme       # override with --set / sealed-secrets / external-secrets
+externalDatabaseUrl: ""
+redis:
+  image: redis:7-alpine
+monitoring:
+  serviceMonitor: false    # true if kube-prometheus-stack is installed
+  alerts: false

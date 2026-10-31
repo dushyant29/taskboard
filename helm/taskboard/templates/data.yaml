@@ -1,0 +1,58 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: {name: {{ .Release.Name }}-postgres}
+spec:
+  serviceName: {{ .Release.Name }}-postgres
+  replicas: 1
+  selector: {matchLabels: {app: postgres, release: {{ .Release.Name }}}}
+  template:
+    metadata: {labels: {app: postgres, release: {{ .Release.Name }}}}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          ports: [{containerPort: 5432}]
+          env:
+            - {name: POSTGRES_USER, value: {{ .Values.postgres.user | quote }}}
+            - {name: POSTGRES_DB, value: {{ .Values.postgres.db | quote }}}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ .Release.Name }}-env, key: POSTGRES_PASSWORD}}
+          readinessProbe: {exec: {command: [pg_isready, -U, {{ .Values.postgres.user }}]}, periodSeconds: 5}
+          resources: {requests: {cpu: 100m, memory: 256Mi}}
+          volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: {{ .Values.postgres.storage }}}}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: {{ .Release.Name }}-postgres}
+spec:
+  clusterIP: None
+  selector: {app: postgres, release: {{ .Release.Name }}}
+  ports: [{port: 5432}]
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: {{ .Release.Name }}-redis}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: redis, release: {{ .Release.Name }}}}
+  template:
+    metadata: {labels: {app: redis, release: {{ .Release.Name }}}}
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          ports: [{containerPort: 6379}]
+          resources: {requests: {cpu: 50m, memory: 64Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: {{ .Release.Name }}-redis}
+spec:
+  selector: {app: redis, release: {{ .Release.Name }}}
+  ports: [{port: 6379}]
