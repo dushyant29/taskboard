@@ -41,6 +41,7 @@ jobs:
       - run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/taskboard-${{ matrix.svc }}:${{ github.sha }}
 
   deploy:
+    if: false
     needs: build
     runs-on: ubuntu-latest
     environment: production        # add required reviewers in repo settings
