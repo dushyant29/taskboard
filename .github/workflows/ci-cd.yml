@@ -32,12 +32,7 @@ jobs:
           context: ${{ matrix.svc }}
           load: true
           tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/taskboard-${{ matrix.svc }}:${{ github.sha }}
-      - uses: aquasecurity/trivy-action@0.24.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.OWNER }}/taskboard-${{ matrix.svc }}:${{ github.sha }}
-          severity: CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
+      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 image --severity CRITICAL --exit-code 1 --ignore-unfixed ${{ env.REGISTRY }}/${{ env.OWNER }}/taskboard-${{ matrix.svc }}:${{ github.sha }}
       - run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/taskboard-${{ matrix.svc }}:${{ github.sha }}
 
   deploy:
